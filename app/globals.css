@@ -1,26 +1,89 @@
 @import "tailwindcss";
 
+@theme {
+  /* Midnight Emerald Palette */
+  --color-emerald-950: #022C22;
+  --color-emerald-900: #064E3B;
+  --color-emerald-800: #065F46;
+  --color-emerald-700: #047857;
+  --color-emerald-100: #A7CFC0;
+
+  /* Deep Ruby Palette */
+  --color-ruby-950: #53001E;
+  --color-ruby-900: #880E4F;
+  --color-ruby-700: #C2185B;
+  --color-ruby-200: #FFB2BE;
+
+  /* Surface & Base */
+  --color-midnight: #101413;
+  --color-surface-low: #0B0F0E;
+  --color-surface-mid: #1C201F;
+  --color-surface-high: #272B2A;
+  --color-surface-bright: #363A39;
+  
+  --color-snow: #F8FAFC;
+  --color-slate-glass: rgba(28, 32, 31, 0.7);
+
+  /* Spacing & Radii */
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #101413;
+  --foreground: #E0E3E1;
+  
+  --primary: #A7CFC0;
+  --secondary: #C8C6C5;
+  --accent: #FFB2BE;
+  
+  --glass-bg: rgba(28, 32, 31, 0.7);
+  --glass-border: rgba(65, 72, 69, 0.15);
+  --glass-highlight: rgba(255, 255, 255, 0.05);
+
+  --font-space-grotesk: "Space Grotesk", sans-serif;
+  --font-manrope: "Manrope", sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-manrope), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-space-grotesk), system-ui, sans-serif;
+    letter-spacing: -0.03em;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid var(--glass-border);
+    border-top: 1px solid var(--glass-highlight);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  }
+
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .glow-emerald {
+    box-shadow: 0 0 15px -2px #A7CFC0;
+  }
+
+  .glow-ruby {
+    box-shadow: 0 0 15px -2px #FFB2BE;
+  }
+
+  .text-shadow-glow {
+    text-shadow: 0 0 20px rgba(167, 207, 192, 0.3);
+  }
 }
