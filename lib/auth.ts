@@ -3,12 +3,53 @@ import GoogleProvider from "next-auth/providers/google";
 import { getDb } from "@/lib/db";
 import { ObjectId } from "mongodb";
 
+import CredentialsProvider from "next-auth/providers/credentials";
+
 export const authOptions: NextAuthOptions = {
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
         }),
+        CredentialsProvider({
+            name: "Email Access",
+            credentials: {
+                email: { label: "Email", type: "email" },
+                name: { label: "Name", type: "text" }
+            },
+            async authorize(credentials) {
+                if (!credentials?.email) return null;
+                const email = credentials.email.toLowerCase().trim();
+                const db = await getDb();
+                let dbUser = await db.collection("User").findOne({ email });
+
+                if (!dbUser) {
+                    const userCount = await db.collection("User").countDocuments();
+                    const role = userCount === 0 ? "ADMIN" : "STAFF";
+                    const result = await db.collection("User").insertOne({
+                        email,
+                        name: credentials.name || email.split("@")[0],
+                        image: "",
+                        role,
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                    });
+                    return {
+                        id: result.insertedId.toString(),
+                        email,
+                        name: credentials.name || email.split("@")[0],
+                        role
+                    };
+                }
+
+                return {
+                    id: dbUser._id.toString(),
+                    email: dbUser.email,
+                    name: dbUser.name,
+                    role: dbUser.role
+                };
+            }
+        })
     ],
     callbacks: {
         async signIn() {
