@@ -28,7 +28,11 @@ function SignInContent() {
             });
 
             if (res?.error) {
-                alert("Sign-in error: " + res.error);
+                if (res.error === "Callback" || res.error.includes("Callback")) {
+                    alert("Database connection error. Please verify your MONGODB_URI in .env.local and Vercel environment variables.");
+                } else {
+                    alert("Sign-in error: " + res.error);
+                }
             } else if (res?.ok) {
                 window.location.href = res.url || callbackUrl;
             }
