@@ -24,7 +24,7 @@ export default function Home() {
           <a href="#" className="hover:text-emerald-100 transition-colors">Security</a>
         </div>
         <Link 
-          href="/api/auth/signin?callbackUrl=/select-org"
+          href="/auth/signin?callbackUrl=/select-org"
           className="bg-emerald-100 text-emerald-950 px-5 py-2 rounded-xl text-sm font-bold hover:scale-105 active:scale-95 transition-all glow-emerald"
         >
           Sign In
@@ -49,7 +49,7 @@ export default function Home() {
 
             <div className="flex flex-wrap gap-4 pt-4">
               <Link
-                href="/api/auth/signin?callbackUrl=/select-org"
+                href="/auth/signin?callbackUrl=/select-org"
                 className="group flex items-center gap-2 bg-emerald-100 text-emerald-950 px-8 py-4 rounded-2xl font-bold hover:bg-white transition-all shadow-xl shadow-emerald-950/20"
               >
                 Launch Dashboard <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

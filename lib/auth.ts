@@ -8,8 +8,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 export const authOptions: NextAuthOptions = {
     providers: [
         GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            clientId: process.env.GOOGLE_CLIENT_ID || "",
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
         }),
         CredentialsProvider({
             name: "Email Access",
@@ -56,58 +56,28 @@ export const authOptions: NextAuthOptions = {
             return true;
         },
         async session({ session, token }) {
-            if (session.user?.email) {
-                try {
-                    const db = await getDb();
-                    const dbUser = await db.collection("User").findOne({ email: session.user.email });
-                    
-                    if (dbUser) {
-                        (session.user as any).role = dbUser.role;
-                        (session.user as any).id = dbUser._id.toString();
-                    } else {
-                        // Fallback to token if user not found in DB
-                        (session.user as any).role = token.role;
-                        (session.user as any).id = token.id;
-                    }
-                } catch (error) {
-                    console.error("Error in session callback:", error);
-                    (session.user as any).role = token.role;
-                    (session.user as any).id = token.id;
-                }
+            if (session.user) {
+                (session.user as any).role = token.role || "STAFF";
+                (session.user as any).id = token.id || token.sub;
             }
             return session;
         },
         async jwt({ token, user }) {
             if (user) {
-                token.role = (user as any).role || token.role;
-                token.id = user.id || token.id;
-
-                if (!token.role || !token.id) {
-                    try {
+                token.role = (user as any).role || "STAFF";
+                token.id = user.id || token.sub;
+            } else if (!token.role || !token.id) {
+                try {
+                    if (token.email) {
                         const db = await getDb();
-                        let dbUser = await db.collection("User").findOne({ email: user.email });
-
-                        if (!dbUser) {
-                            const userCount = await db.collection("User").countDocuments();
-                            const role = userCount === 0 ? "ADMIN" : "STAFF";
-
-                            const result = await db.collection("User").insertOne({
-                                email: user.email,
-                                name: user.name,
-                                image: user.image,
-                                role: role,
-                                createdAt: new Date(),
-                                updatedAt: new Date()
-                            });
-                            token.role = role;
-                            token.id = result.insertedId.toString();
-                        } else {
+                        const dbUser = await db.collection("User").findOne({ email: token.email });
+                        if (dbUser) {
                             token.role = dbUser.role;
                             token.id = dbUser._id.toString();
                         }
-                    } catch (err) {
-                        console.error("JWT Callback Error:", err);
                     }
+                } catch (err) {
+                    console.error("JWT lookup error:", err);
                 }
             }
             return token;
@@ -119,5 +89,5 @@ export const authOptions: NextAuthOptions = {
     pages: {
         signIn: "/auth/signin",
     },
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: process.env.NEXTAUTH_SECRET || "emerald-vault-logistics-fallback-secret-key-32chars",
 };

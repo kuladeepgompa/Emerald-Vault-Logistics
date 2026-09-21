@@ -18,11 +18,18 @@ function SignInContent() {
         if (!email) return;
         setIsSubmitting(true);
         try {
-            await signIn("credentials", {
+            const res = await signIn("credentials", {
                 email,
                 name: name || email.split("@")[0],
+                redirect: false,
                 callbackUrl,
             });
+
+            if (res?.error) {
+                alert("Sign-in error: " + res.error);
+            } else if (res?.ok) {
+                window.location.href = res.url || callbackUrl;
+            }
         } catch (err) {
             console.error("Credentials Sign in error", err);
         } finally {

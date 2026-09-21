@@ -58,7 +58,7 @@ export default function WarehouseSelectPage() {
     // Redirect to login if unauthenticated
     useEffect(() => {
         if (status === "unauthenticated") {
-            router.replace("/api/auth/signin?callbackUrl=/select-org");
+            router.replace("/auth/signin?callbackUrl=/select-org");
         }
     }, [status, router]);
 

@@ -89,7 +89,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     const cookieStore = await cookies();
     const warehouseId = cookieStore.get("warehouseId")?.value;
 
-    if (!session) redirect("/api/auth/signin");
+    if (!session) redirect("/auth/signin");
     if (!warehouseId) redirect("/select-org");
 
     const resolvedParams = await searchParams;
