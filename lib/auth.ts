@@ -68,21 +68,47 @@ export const authOptions: NextAuthOptions = {
             return session;
         },
         async jwt({ token, user }) {
+            const adminEmails = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",").map(e => e.trim()).filter(Boolean);
+
             if (user) {
-                token.role = (user as any).role || "STAFF";
-                token.id = user.id || token.sub;
-            } else if (!token.role || !token.id) {
+                const email = (user.email || token.email || "").toLowerCase().trim();
+                const isExplicitAdmin = adminEmails.includes(email);
+
                 try {
-                    if (token.email) {
-                        const db = await getDb();
-                        const dbUser = await db.collection("User").findOne({ email: token.email });
-                        if (dbUser) {
-                            token.role = dbUser.role;
-                            token.id = dbUser._id.toString();
+                    const db = await getDb();
+                    let dbUser = await db.collection("User").findOne({ email });
+
+                    if (!dbUser) {
+                        const userCount = await db.collection("User").countDocuments();
+                        const role = (isExplicitAdmin || userCount === 0) ? "ADMIN" : "STAFF";
+
+                        const result = await db.collection("User").insertOne({
+                            email,
+                            name: user.name || email.split("@")[0],
+                            image: user.image || "",
+                            role,
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        });
+                        token.role = role;
+                        token.id = result.insertedId.toString();
+                    } else {
+                        const role = isExplicitAdmin ? "ADMIN" : dbUser.role;
+                        if (isExplicitAdmin && dbUser.role !== "ADMIN") {
+                            await db.collection("User").updateOne({ _id: dbUser._id }, { $set: { role: "ADMIN", updatedAt: new Date() } });
                         }
+                        token.role = role;
+                        token.id = dbUser._id.toString();
                     }
                 } catch (err) {
-                    console.error("JWT lookup error:", err);
+                    console.error("JWT sync error:", err);
+                    token.role = isExplicitAdmin ? "ADMIN" : ((user as any).role || token.role || "STAFF");
+                    token.id = user.id || token.sub;
+                }
+            } else if (token.email) {
+                const isExplicitAdmin = adminEmails.includes(token.email.toLowerCase().trim());
+                if (isExplicitAdmin) {
+                    token.role = "ADMIN";
                 }
             }
             return token;
