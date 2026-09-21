@@ -46,6 +46,7 @@ export async function POST(req: Request) {
 
         let totalAmount = 0;
         let totalProfit = 0;
+        const itemSnapshots: any[] = [];
 
         trip.loadedItems.forEach((item: any) => {
             const sold = item.qtyLoaded - (item.qtyReturned || 0);
@@ -57,6 +58,12 @@ export async function POST(req: Request) {
                 // Profit = Selling Price - Invoice Cost
                 const profitPerUnit = finalPrice - (product.invoiceCost || finalPrice);
                 totalProfit += sold * profitPerUnit;
+
+                itemSnapshots.push({
+                    productId: new ObjectId(item.productId.toString()),
+                    unitPrice: finalPrice,
+                    qtySold: sold
+                });
             }
         });
 
@@ -65,6 +72,7 @@ export async function POST(req: Request) {
             tripId: new ObjectId(tripId),
             totalAmount,
             totalProfit,
+            items: itemSnapshots,
             warehouseId: trip.warehouseId,
             generatedBy: new ObjectId((session.user as any).id),
             generatedAt: date ? new Date(date) : new Date(),

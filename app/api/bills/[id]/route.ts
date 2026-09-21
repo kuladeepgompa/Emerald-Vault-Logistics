@@ -43,15 +43,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
             .toArray();
 
         const productMap = new Map(products.map(p => [p._id.toString(), p]));
+        const billItemMap = new Map((bill.items || []).map((i: any) => [i.productId.toString(), i.unitPrice]));
 
         const enrichedItems = trip.loadedItems.map((item: any) => {
             const product = productMap.get(item.productId.toString()) as any;
+            const snapshotPrice = billItemMap.get(item.productId.toString());
             return {
                 ...item,
                 productId: item.productId.toString(),
                 productName: product?.name || "Unknown",
                 productSku: product?.sku || "",
-                productPrice: product?.price || 0
+                productPrice: snapshotPrice ?? (product?.salePrice || product?.price || 0)
             };
         });
 

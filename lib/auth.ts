@@ -77,34 +77,38 @@ export const authOptions: NextAuthOptions = {
             }
             return session;
         },
-        async jwt({ token, user, trigger }) {
+        async jwt({ token, user }) {
             if (user) {
-                // This only runs on first login/sign in
-                const db = await getDb();
-                let dbUser = await db.collection("User").findOne({ email: user.email });
+                token.role = (user as any).role || token.role;
+                token.id = user.id || token.id;
 
-                if (!dbUser) {
-                    // Check if this is the first user
-                    const userCount = await db.collection("User").countDocuments();
-                    const role = userCount === 0 ? "ADMIN" : "STAFF";
+                if (!token.role || !token.id) {
+                    try {
+                        const db = await getDb();
+                        let dbUser = await db.collection("User").findOne({ email: user.email });
 
-                    // Auto-create user on first sign-in
-                    const result = await db.collection("User").insertOne({
-                        email: user.email,
-                        name: user.name,
-                        image: user.image,
-                        role: role,
-                        createdAt: new Date(),
-                        updatedAt: new Date()
-                    });
-                    token.role = role;
-                    token.id = result.insertedId.toString();
-                } else {
-                    token.role = dbUser.role;
-                    token.id = (dbUser._id as ObjectId).toString();
+                        if (!dbUser) {
+                            const userCount = await db.collection("User").countDocuments();
+                            const role = userCount === 0 ? "ADMIN" : "STAFF";
+
+                            const result = await db.collection("User").insertOne({
+                                email: user.email,
+                                name: user.name,
+                                image: user.image,
+                                role: role,
+                                createdAt: new Date(),
+                                updatedAt: new Date()
+                            });
+                            token.role = role;
+                            token.id = result.insertedId.toString();
+                        } else {
+                            token.role = dbUser.role;
+                            token.id = dbUser._id.toString();
+                        }
+                    } catch (err) {
+                        console.error("JWT Callback Error:", err);
+                    }
                 }
-            } else if (trigger === "update") {
-                // Handle manual updates if needed
             }
             return token;
         }
