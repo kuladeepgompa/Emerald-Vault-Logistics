@@ -89,5 +89,17 @@ export const authOptions: NextAuthOptions = {
     pages: {
         signIn: "/auth/signin",
     },
+    useSecureCookies: process.env.NODE_ENV === "production" || process.env.VERCEL === "1",
+    cookies: {
+        sessionToken: {
+            name: process.env.NODE_ENV === "production" || process.env.VERCEL === "1" ? `__Secure-next-auth.session-token` : `next-auth.session-token`,
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: process.env.NODE_ENV === "production" || process.env.VERCEL === "1",
+            },
+        },
+    },
     secret: process.env.NEXTAUTH_SECRET || "emerald-vault-logistics-fallback-secret-key-32chars",
 };

@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { signIn } from "next-auth/react";
 import { ShieldCheck, Package, ArrowRight, Mail, KeyRound } from "lucide-react";
 import { useSearchParams } from "next/navigation";
