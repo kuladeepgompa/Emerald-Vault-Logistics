@@ -23,9 +23,12 @@ export const authOptions: NextAuthOptions = {
                 const db = await getDb();
                 let dbUser = await db.collection("User").findOne({ email });
 
+                const adminEmails = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",").map(e => e.trim()).filter(Boolean);
+                const isExplicitAdmin = adminEmails.includes(email);
+
                 if (!dbUser) {
                     const userCount = await db.collection("User").countDocuments();
-                    const role = userCount === 0 ? "ADMIN" : "STAFF";
+                    const role = (isExplicitAdmin || userCount === 0) ? "ADMIN" : "STAFF";
                     const result = await db.collection("User").insertOne({
                         email,
                         name: credentials.name || email.split("@")[0],
@@ -42,11 +45,13 @@ export const authOptions: NextAuthOptions = {
                     };
                 }
 
+                const role = isExplicitAdmin ? "ADMIN" : dbUser.role;
+
                 return {
                     id: dbUser._id.toString(),
                     email: dbUser.email,
                     name: dbUser.name,
-                    role: dbUser.role
+                    role
                 };
             }
         })

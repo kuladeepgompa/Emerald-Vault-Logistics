@@ -15,9 +15,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         }
 
         const { id } = await params;
-        const { email, name } = await req.json();
+        const { email, name, role } = await req.json();
 
-        if (!email && !name) {
+        if (!email && !name && !role) {
             return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
         }
 
@@ -25,6 +25,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         const updateDoc: any = { updatedAt: new Date() };
         if (email) updateDoc.email = email;
         if (name) updateDoc.name = name;
+        if (role) updateDoc.role = role;
 
         const result = await db.collection("User").findOneAndUpdate(
             { _id: new ObjectId(id) },
